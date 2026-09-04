@@ -11,6 +11,7 @@ venv/
 
 # Secrets & environment
 .env
+PLAN.md
 
 # Runtime artifacts (keep data/raw sample corpus, ignore generated stores)
 data/chroma/

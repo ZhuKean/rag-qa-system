@@ -1,0 +1,32 @@
+# Web framework
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+
+# Config & validation
+pydantic==2.13.5
+pydantic-settings==2.15.0
+
+# LLM client (works with any OpenAI-compatible endpoint: Ollama / DeepSeek / OpenAI)
+openai==1.109.1
+
+# Vector store (embedded, no server needed)
+chromadb==1.5.9
+
+# Local bilingual embeddings (BAAI/bge-m3)
+sentence-transformers==6.0.1
+
+# Document parsing
+pypdf==6.16.2
+python-docx==1.2.0
+
+# PDF page rendering (scanned-page rasterization) & image handling for OCR
+pypdfium2==5.13.0
+pillow==12.3.0
+
+# OCR for scanned PDFs (pure pip install, works on Apple Silicon)
+rapidocr==3.9.2
+
+# Evaluation (Faithfulness / Context Precision / etc.)
+ragas==0.4.3
+datasets==5.0.1
+pandas==3.0.5

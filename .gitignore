@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+
+# Secrets & environment
+.env
+
+# Runtime artifacts (keep data/raw sample corpus, ignore generated stores)
+data/chroma/
+data/manifest.json
+logs/*.db
+logs/*.log
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/

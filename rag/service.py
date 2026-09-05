@@ -141,6 +141,7 @@ def ask(
         refused=chat.refused,
         model=chat.model,
         answer_chars=len(chat.answer),
+        answer=chat.answer,
     )
     return AskResult(
         request_id=request_id,

@@ -90,6 +90,8 @@ def _run_grid(
     reranker_values: list[bool],
     temperature_values: list[float],
     limit: int,
+    *,
+    mock: bool = False,
 ) -> list[SweepRow]:
     settings = get_settings()
     out: list[SweepRow] = []
@@ -132,6 +134,23 @@ def _run_grid(
     return out
 
 
+def _apply_mock() -> "object":
+    """Context manager that patches rag.service.generate so the LLM is
+    never called. Yields the patcher so the caller can stop it."""
+    from unittest.mock import patch
+    from rag.generator import ChatResult
+
+    def _fake_generate(messages, docs, **_kwargs):  # noqa: ANN001
+        return ChatResult(
+            answer="根据《员工手册》第 1 条，这是答案。",
+            citations=list(docs),
+            refused=False,
+            model="mock-model",
+        )
+
+    return patch("rag.service.generate", side_effect=_fake_generate)
+
+
 def main(argv: list[str] | None = None) -> int:
     global COST_INPUT_PER_1K, COST_OUTPUT_PER_1K
 
@@ -143,6 +162,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--cost-input", type=float, default=COST_INPUT_PER_1K)
     parser.add_argument("--cost-output", type=float, default=COST_OUTPUT_PER_1K)
     parser.add_argument("--output", default="eval/sensitivity.csv")
+    parser.add_argument("--mock", action="store_true",
+                        help="Patch rag.service.generate so no LLM is called.")
     args = parser.parse_args(argv)
 
     COST_INPUT_PER_1K = args.cost_input
@@ -152,7 +173,15 @@ def main(argv: list[str] | None = None) -> int:
     rerankers = [s.lower() == "true" for s in args.reranker.split(",")]
     temps = [float(x) for x in args.temperature.split(",")]
 
-    sweep = _run_grid(top_ks, rerankers, temps, limit=args.limit)
+    if args.mock:
+        patcher = _apply_mock()
+        patcher.start()
+        try:
+            sweep = _run_grid(top_ks, rerankers, temps, limit=args.limit, mock=True)
+        finally:
+            patcher.stop()
+    else:
+        sweep = _run_grid(top_ks, rerankers, temps, limit=args.limit)
     out_path = __import__("pathlib").Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", newline="", encoding="utf-8") as fh:

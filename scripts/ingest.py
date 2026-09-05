@@ -29,7 +29,13 @@ import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from app.config import get_settings
+# Allow running as a plain script (`python scripts/ingest.py`) by putting
+# the project root on sys.path; harmless when invoked via `-m scripts.ingest`.
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from app.config import get_settings  # noqa: E402
 from rag import vector_store
 from rag.chunker import build_chunks
 from rag.loaders import load_docx, load_pdf, load_text

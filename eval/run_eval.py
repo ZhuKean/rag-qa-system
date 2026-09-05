@@ -14,8 +14,9 @@ Run::
 
     python -m eval.run_eval --output eval/results.csv
 
-NB: this script touches the real LLM. Make sure ``.env`` points at a
-reachable endpoint (Ollama locally, or DeepSeek for evaluation).
+Use ``--mock`` to skip the real LLM (the mock fakes ``rag.service.generate``
+so it returns a reply containing the question's expected keywords).
+Useful in CI or offline smoke-tests when no LLM endpoint is reachable.
 """
 from __future__ import annotations
 
@@ -26,11 +27,10 @@ import logging
 import statistics
 import sys
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Iterable
 
-# ragas imports are deferred to keep the lightweight tests fast.
-# We only need them inside main().
 logger = logging.getLogger("eval")
 logging.basicConfig(
     level=logging.INFO,
@@ -84,82 +84,64 @@ def _ragas_metrics(
     )
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Run the eval suite.")
-    parser.add_argument(
-        "--questions",
-        default="eval/questions.jsonl",
-        help="Path to the JSONL question file.",
-    )
-    parser.add_argument(
-        "--output",
-        default="eval/results.csv",
-        help="Where to write the per-question CSV.",
-    )
-    parser.add_argument(
-        "--no-ragas",
-        action="store_true",
-        help="Skip ragas (use only the keyword accuracy metric).",
-    )
-    parser.add_argument(
-        "--limit",
-        type=int,
-        default=0,
-        help="Process only the first N questions (for smoke tests).",
-    )
-    args = parser.parse_args(argv)
-
-    questions_path = Path(args.questions)
-    if not questions_path.exists():
-        logger.error("questions file not found: %s", questions_path)
-        return 1
-
-    from rag.service import ask  # deferred: pulls in the full service
-
-    raw = [
+def _load_questions(path: Path) -> list[dict]:
+    return [
         json.loads(line)
-        for line in questions_path.read_text(encoding="utf-8").splitlines()
+        for line in path.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
-    if args.limit:
-        raw = raw[: args.limit]
 
-    rows: list[EvalRow] = []
-    q_texts: list[str] = []
-    a_texts: list[str] = []
-    c_texts: list[list[str]] = []
-    g_texts: list[str] = []
 
-    for item in raw:
+def _run_questions(
+    items: Iterable[dict],
+    rows: list[EvalRow],
+    q_texts: list[str],
+    a_texts: list[str],
+    c_texts: list[list[str]],
+    g_texts: list[str],
+) -> None:
+    """Exercise the real pipeline on each question and accumulate outputs.
+
+    Re-retrieves after each ``ask`` so ragas gets the real context (without
+    widening the AskResult dataclass for one-off callers).
+    """
+    from rag.retriever import retrieve as _retrieve
+    from rag.service import ask
+
+    for item in items:
         t0 = time.monotonic()
         result = ask(item["question"])
         elapsed = (time.monotonic() - t0) * 1000
         hits, total, acc = _accuracy(result.answer, item.get("expected_keywords", []))
-        rows.append(
-            EvalRow(
-                id=item["id"],
-                question=item["question"],
-                answer=result.answer,
-                refused=result.refused,
-                retrieval_count=result.retrieval_count,
-                latency_ms=elapsed,
-                keywords_hit=hits,
-                keywords_total=total,
-                accuracy=acc,
-            )
-        )
+        rows.append(EvalRow(
+            id=item["id"],
+            question=item["question"],
+            answer=result.answer,
+            refused=result.refused,
+            retrieval_count=result.retrieval_count,
+            latency_ms=elapsed,
+            keywords_hit=hits,
+            keywords_total=total,
+            accuracy=acc,
+        ))
         q_texts.append(item["question"])
         a_texts.append(result.answer)
-        # We don't have the raw docs in AskResult — re-retrieve here
-        # so ragas gets real context. Costs an extra embed + query but
-        # keeps the API contract small.
-        from rag.retriever import retrieve
-
-        docs = retrieve(item["question"])
+        docs = _retrieve(item["question"])
         c_texts.append([d.chunk.text for d in docs])
         g_texts.append(" ".join(item.get("expected_keywords", [])))
 
-    if not args.no_ragas and rows:
+
+def _summarise_and_write(
+    rows: list[EvalRow],
+    *,
+    no_ragas: bool,
+    q_texts: list[str],
+    a_texts: list[str],
+    c_texts: list[list[str]],
+    g_texts: list[str],
+    output_path: Path,
+) -> int:
+    if not no_ragas and rows:
         try:
             logger.info("computing ragas metrics on %d rows", len(rows))
             faith, ctx_p = _ragas_metrics(q_texts, a_texts, c_texts, g_texts)
@@ -169,36 +151,44 @@ def main(argv: list[str] | None = None) -> int:
         except Exception as exc:
             logger.warning("ragas evaluation failed: %s", exc)
 
-    out_path = Path(args.output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w", newline="", encoding="utf-8") as fh:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=list(asdict(rows[0]).keys()))
         writer.writeheader()
         for r in rows:
             writer.writerow(asdict(r))
 
-    # Summary
     n = len(rows)
     acc_count = sum(1 for r in rows if r.accuracy)
     refused_count = sum(1 for r in rows if r.refused)
     latencies = [r.latency_ms for r in rows]
-    p50 = statistics.median(latencies) if latencies else 0
+    p50 = statistics.median(latencies) if latencies else 0.0
     p90 = (
-        statistics.quantiles(latencies, n=10)[8] if len(latencies) >= 10 else max(latencies, default=0)
+        statistics.quantiles(latencies, n=10)[8]
+        if len(latencies) >= 10
+        else max(latencies, default=0.0)
     )
     summary = {
         "questions": n,
-        "accuracy": acc_count / n if n else 0,
+        "accuracy": acc_count / n if n else 0.0,
         "refused": refused_count,
         "p50_latency_ms": round(p50, 1),
         "p90_latency_ms": round(p90, 1),
         "mean_faithfulness": (
-            round(statistics.mean(r.faithfulness for r in rows if r.faithfulness is not None), 3)
+            round(
+                statistics.mean(r.faithfulness for r in rows if r.faithfulness is not None),
+                3,
+            )
             if any(r.faithfulness is not None for r in rows)
             else None
         ),
         "mean_context_precision": (
-            round(statistics.mean(r.context_precision for r in rows if r.context_precision is not None), 3)
+            round(
+                statistics.mean(
+                    r.context_precision for r in rows if r.context_precision is not None
+                ),
+                3,
+            )
             if any(r.context_precision is not None for r in rows)
             else None
         ),
@@ -206,8 +196,76 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== SUMMARY ===")
     for k, v in summary.items():
         print(f"{k:>22}: {v}")
-    print(f"\nresults written to {out_path}")
+    print(f"\nresults written to {output_path}")
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run the eval suite.")
+    parser.add_argument("--questions", default="eval/questions.jsonl")
+    parser.add_argument("--output", default="eval/results.csv")
+    parser.add_argument("--no-ragas", action="store_true",
+                        help="Skip ragas (keyword accuracy only).")
+    parser.add_argument("--limit", type=int, default=0,
+                        help="Process only the first N questions.")
+    parser.add_argument("--mock", action="store_true",
+                        help="Patch rag.service.generate so no LLM is called.")
+    args = parser.parse_args(argv)
+
+    questions_path = Path(args.questions)
+    if not questions_path.exists():
+        logger.error("questions file not found: %s", questions_path)
+        return 1
+
+    raw = _load_questions(questions_path)
+    if args.limit:
+        raw = raw[: args.limit]
+
+    rows: list[EvalRow] = []
+    q_texts: list[str] = []
+    a_texts: list[str] = []
+    c_texts: list[list[str]] = []
+    g_texts: list[str] = []
+
+    if args.mock:
+        # Patch rag.service.generate so the LLM step is bypassed. The fake
+        # returns a reply containing the question's expected keywords, so
+        # the accuracy metric exercises the full service plumbing without
+        # needing a reachable LLM endpoint.
+        from unittest.mock import patch
+        from rag.generator import ChatResult
+
+        def _fake_generate(messages, docs, **_kwargs):  # noqa: ANN001
+            question = next(
+                (m.content for m in reversed(messages) if m.role == "user"),
+                "",
+            )
+            keywords = _mock_keywords.get(question, [])
+            return ChatResult(
+                answer=" ".join(keywords) + " [1]",
+                citations=list(docs),
+                refused=False,
+                model="mock-model",
+            )
+
+        _mock_keywords: dict[str, list[str]] = {
+            item["question"]: item.get("expected_keywords", [])
+            for item in raw
+        }
+        with patch("rag.service.generate", side_effect=_fake_generate):
+            _run_questions(raw, rows, q_texts, a_texts, c_texts, g_texts)
+    else:
+        _run_questions(raw, rows, q_texts, a_texts, c_texts, g_texts)
+
+    return _summarise_and_write(
+        rows,
+        no_ragas=args.no_ragas,
+        q_texts=q_texts,
+        a_texts=a_texts,
+        c_texts=c_texts,
+        g_texts=g_texts,
+        output_path=Path(args.output),
+    )
 
 
 if __name__ == "__main__":

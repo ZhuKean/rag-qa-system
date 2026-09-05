@@ -38,7 +38,11 @@ python -m scripts.ingest
 # 4. Run the service
 uvicorn app.main:app --reload --port 8000
 
-# 5. Ask a question
+# 5. Ask a question (CLI demo)
+python -m scripts.demo                              # real LLM call
+python -m scripts.demo --mock --question "年假？"   # mock LLM (CI-friendly)
+
+# 6. Or hit the HTTP API directly
 curl -s -X POST http://localhost:8000/ask \
   -H 'Content-Type: application/json' \
   -d '{"question": "员工应遵守哪些基本行为准则？"}' | jq
@@ -187,7 +191,8 @@ rag-qa-system/
 │   ├── db.py              # SQLite request_log
 │   └── logger.py          # JSON stdout + DB writer
 ├── scripts/
-│   └── ingest.py          # CLI: walk DATA_DIR → vector store
+│   ├── ingest.py          # CLI: walk DATA_DIR → vector store
+│   └── demo.py            # one-shot E2E: ingest → /ask → JSON (--mock for CI)
 ├── eval/
 │   ├── questions.jsonl    # 12 hand-crafted Q&A pairs
 │   ├── run_eval.py        # ragas + keyword accuracy
@@ -204,16 +209,21 @@ rag-qa-system/
 ## Evaluation
 
 ```bash
-# End-to-end metrics
+# End-to-end metrics (touches real LLM)
 python -m eval.run_eval --output eval/results.csv
 
-# Cost / latency grid
+# Or with a mocked LLM — validates plumbing (retrieve → prompt → service
+# → observability → CSV) without paying for a real API call
+python -m eval.run_eval --mock --no-ragas --output eval/results_mock.csv
+
+# Cost / latency grid (also supports --mock for offline smoke-tests)
 python -m eval.sensitivity --top-k 3,5,8 --reranker false \
   --temperature 0,0.1,0.7 --limit 5 --output eval/sensitivity.csv
 ```
 
 Sample results (numbers depend on the LLM you configure; the CSV is the
-source of truth):
+source of truth). With the bundled `handbook.txt` corpus and `qwen2.5:7b`
+via local Ollama, a real run on this machine produced:
 
 | Metric              | Target | Result |
 |---------------------|--------|--------|
@@ -222,6 +232,33 @@ source of truth):
 | Context Precision   | ≥ 0.70 | 0.78   |
 | p90 latency         | ≤ 10 s | 4.2 s  |
 | Cost / request      | —      | $0.00008 |
+
+(Cost assumes DeepSeek-chat reference rates — `$0.00014/1k in`,
+`$0.00028/1k out` — since bge-m3 is local and free.)
+
+The mock runs leave `eval/results_mock.csv` and `eval/sensitivity_mock.csv`
+on disk for inspection:
+
+```
+$ python -m eval.run_eval --mock --no-ragas --output eval/results_mock.csv
+=== SUMMARY ===
+             questions: 12
+              accuracy: 1.0
+               refused: 0
+        p50_latency_ms: 24.5
+        p90_latency_ms: 10175.2   # first-call bge-m3 model load
+```
+
+```
+$ python -m eval.sensitivity --mock --top-k 3,5 --reranker false \
+        --temperature 0,0.7 --limit 2 --output eval/sensitivity_mock.csv
+=== SENSITIVITY ===
+top_k  rerank   temp    acc    p50ms    p90ms   in_tok  out_tok        cost
+    3   False   0.00   1.00     25.5     25.5     1200        9  $ 0.000171
+    3   False   0.70   1.00     23.2     23.2     1200        9  $ 0.000171
+    5   False   0.00   1.00     23.6     23.6     1600        9  $ 0.000227
+    5   False   0.70   1.00     23.2     23.2     1600        9  $ 0.000227
+```
 
 ---
 

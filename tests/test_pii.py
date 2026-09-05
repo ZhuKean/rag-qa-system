@@ -22,6 +22,16 @@ def test_redact_id_card():
     assert "[REDACTED_ID_CARD]" in out
 
 
+def test_redact_id_card_all_numeric():
+    # Regression: an 18-digit all-numeric PRC ID card (the common case
+    # — most cards do NOT end with X) must be labelled ID_CARD, not
+    # BANK_CARD, even though the 18-digit run matches both regexes.
+    out = redact_pii("ID 110101199003078888 here")
+    assert "110101199003078888" not in out
+    assert "[REDACTED_ID_CARD]" in out
+    assert "[REDACTED_BANK_CARD]" not in out
+
+
 def test_redact_bank_card():
     out = redact_pii("card 6222021234567890123 end")
     assert "6222021234567890123" not in out

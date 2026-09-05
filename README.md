@@ -285,6 +285,27 @@ Quick highlights:
 
 ---
 
+## Sample logs (PII-redacted)
+
+A small captured batch of `log_event` JSON lines is checked in at
+[`docs/sample-logs.jsonl`](docs/sample-logs.jsonl). It was generated
+with `python scripts/capture_sample_logs.py > docs/sample-logs.jsonl`
+and exercises three scenarios:
+
+1. A clean question (no PII).
+2. A question containing a phone number, an 18-digit ID card, an
+   email, and a 19-digit bank card — all replaced with
+   `[REDACTED_<TYPE>]` markers before the log line is written.
+3. An out-of-domain question that is refused (`refused: true`,
+   `reason: "no_relevant_docs"`).
+
+Each line shows the full set of fields we persist (request_id,
+session_id, retrieval/generation/total ms, refusal flag, etc.) so
+any reviewer can use the file as a worked example of the observability
+shape.
+
+---
+
 ## License
 
 MIT. See `LICENSE`.

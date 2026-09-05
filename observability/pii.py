@@ -34,8 +34,16 @@ _EMAIL = re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b")
 
 
 _REPLACEMENTS = (
-    (_BANK_CARD, "[REDACTED_BANK_CARD]"),
+    # Order matters: more specific patterns must run FIRST so they get
+    # the chance to claim a match before a looser pattern steals it.
+    # An 18-digit all-numeric PRC ID card matches BOTH _ID_CARD (17
+    # digits + 1 digit) AND _BANK_CARD (16–19 digits). If _BANK_CARD
+    # ran first it would relabel the ID card as a bank card, which
+    # is misleading for downstream audit even though the data itself
+    # stays redacted. Id_CARD before Bank_CARD ensures the more
+    # specific marker wins for the common (X-less) case.
     (_ID_CARD, "[REDACTED_ID_CARD]"),
+    (_BANK_CARD, "[REDACTED_BANK_CARD]"),
     (_PHONE, "[REDACTED_PHONE]"),
     (_EMAIL, "[REDACTED_EMAIL]"),
 )

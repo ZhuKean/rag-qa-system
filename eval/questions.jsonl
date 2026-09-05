@@ -1,0 +1,12 @@
+{"id": 1, "question": "员工守则的总则是关于什么的？", "expected_keywords": ["行为规范", "运营", "权益"], "source": "handbook.txt", "page": 1}
+{"id": 2, "question": "员工在保密方面有哪些具体要求？", "expected_keywords": ["机密", "经营战略", "复制", "下载"], "source": "handbook.txt", "page": 1}
+{"id": 3, "question": "上班时间可以处理私人事务吗？", "expected_keywords": ["不得", "私人事务"], "source": "handbook.txt", "page": 1}
+{"id": 4, "question": "违反员工守则会如何处理？", "expected_keywords": ["警告", "降级", "奖金", "解除"], "source": "handbook.txt", "page": 1}
+{"id": 5, "question": "员工的着装要求是什么？", "expected_keywords": ["整洁", "拖鞋", "背心", "短裤"], "source": "handbook.txt", "page": 1}
+{"id": 6, "question": "关于廉洁自律有哪些规定？", "expected_keywords": ["礼品", "礼金", "红包", "宴请"], "source": "handbook.txt", "page": 1}
+{"id": 7, "question": "客户服务应遵守什么原则？", "expected_keywords": ["首问负责制", "客户"], "source": "handbook.txt", "page": 1}
+{"id": 8, "question": "安全生产的基本要求有哪些？", "expected_keywords": ["安全操作规程", "隐患", "劳保用品"], "source": "handbook.txt", "page": 1}
+{"id": 9, "question": "请假需要遵守什么流程？", "expected_keywords": ["请假", "审批"], "source": "handbook.txt", "page": 1}
+{"id": 10, "question": "团队协作方面有什么要求？", "expected_keywords": ["团队", "合作"], "source": "handbook.txt", "page": 1}
+{"id": 11, "question": "发现利益冲突应该怎么处理？", "expected_keywords": ["申报", "回避"], "source": "handbook.txt", "page": 1}
+{"id": 12, "question": "员工应该遵守哪些基本行为准则？", "expected_keywords": ["企业文化", "服务意识", "责任心", "机密", "团队"], "source": "handbook.txt", "page": 1}

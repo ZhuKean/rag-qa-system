@@ -31,9 +31,17 @@ def test_load_text_missing_file_raises() -> None:
         load_text(str(RAW_DIR / "no_such_file.txt"))
 
 
-def test_load_docx_roundtrip(tmp_path: Path) -> None:
-    """Create a tiny .docx on the fly, load it back, verify paragraphs survive."""
-    path = tmp_path / "note.docx"
+def test_load_docx_roundtrip() -> None:
+    """Create a tiny .docx on the fly, load it back, verify paragraphs survive.
+
+    Builds the temp dir with ``tempfile.mkdtemp`` rather than pytest's
+    ``tmp_path`` fixture — the latter triggers a permission-denied in
+    some sandboxed runners.
+    """
+    import tempfile
+
+    d = Path(tempfile.mkdtemp(prefix="rag_loader_"))
+    path = d / "note.docx"
     doc = Document()
     doc.add_paragraph("Annual leave is 15 days.")
     doc.add_paragraph("Remote work allowed twice a week.")

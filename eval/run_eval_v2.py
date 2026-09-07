@@ -53,8 +53,9 @@ class QuestionResult:
 def _check_keywords(answer: str, expected: list[str], missing_out: list[str]) -> bool:
     if not expected:
         return True
-    hits = sum(1 for k in expected if k in answer)
-    missing_out.extend(k for k in expected if k not in answer)
+    answer_l = answer.lower()
+    hits = sum(1 for k in expected if k.lower() in answer_l)
+    missing_out.extend(k for k in expected if k.lower() not in answer_l)
     return hits / len(expected) >= 0.8
 
 
@@ -70,14 +71,17 @@ def _check_citations(answer: str, retrieved_ids: list[str],
     import re
     failures: list[str] = []
     nums = [int(m.group(1)) for m in re.finditer(r"\[(\d+)\]", answer)]
+    # Count UNIQUE citation indices for the min/max bounds: an answer
+    # citing [1][5][1][5] uses 2 sources, not 4 citations.
+    unique_nums = sorted(set(nums))
     if not nums and min_c > 0:
         failures.append(f"no citations found, expected >= {min_c}")
         return False, failures
-    if len(nums) < min_c:
-        failures.append(f"only {len(nums)} citations, expected >= {min_c}")
-    if len(nums) > max_c:
-        failures.append(f"{len(nums)} citations, expected <= {max_c}")
-    for n in nums:
+    if len(unique_nums) < min_c:
+        failures.append(f"only {len(unique_nums)} unique citations, expected >= {min_c}")
+    if len(unique_nums) > max_c:
+        failures.append(f"{len(unique_nums)} unique citations, expected <= {max_c}")
+    for n in unique_nums:
         if n < 1 or n > len(retrieved_ids):
             failures.append(f"citation [{n}] out of range")
             continue
@@ -132,19 +136,21 @@ def assert_citation(q: dict, r: QuestionResult, raw: dict) -> None:
 
     import re
     nums = [int(m.group(1)) for m in re.finditer(r"\[(\d+)\]", r.answer)]
+    # UNIQUE indices for the min/max bounds (see _check_citations).
+    unique_nums = sorted(set(nums))
     min_c = q.get("expected_min_citations", 1)
     max_c = q.get("expected_max_citations", 5)
     if not nums and min_c > 0:
         r.failures.append(f"no citations found, expected >= {min_c}")
-    if len(nums) < min_c:
-        r.failures.append(f"only {len(nums)} citations, expected >= {min_c}")
-    if len(nums) > max_c:
-        r.failures.append(f"{len(nums)} citations, expected <= {max_c}")
+    if len(unique_nums) < min_c:
+        r.failures.append(f"only {len(unique_nums)} unique citations, expected >= {min_c}")
+    if len(unique_nums) > max_c:
+        r.failures.append(f"{len(unique_nums)} unique citations, expected <= {max_c}")
 
     # Skip the "which chunk" check if the author didn't pin one down.
     if not expected_ids:
         return
-    for n in nums:
+    for n in unique_nums:
         if n < 1 or n > len(retrieved_ids):
             r.failures.append(f"citation [{n}] out of range")
             continue
@@ -203,6 +209,40 @@ _RUBRIC = {
 # Adapters — turn a JSONL record into a request to the service
 # ---------------------------------------------------------------------------
 
+def _corpus_text() -> str:
+    """Concatenate everything the ingest walk would load (txt/md/docx/pdf
+    need the heavy loaders; pdf text is approximated by the source docs
+    that generated it — keyword checks only target txt/md/docx content).
+    """
+    import glob
+    parts: list[str] = []
+    for path in sorted(glob.glob(str(ROOT / "data" / "raw" / "*"))):
+        if path.endswith((".txt", ".md")):
+            parts.append(open(path, encoding="utf-8", errors="ignore").read())
+        elif path.endswith(".docx"):
+            try:
+                from docx import Document
+                parts.append("\n".join(p.text for p in Document(path).paragraphs))
+            except Exception:  # noqa: BLE001
+                pass
+    return "\n".join(parts)
+
+
+def validate_questions(input_path: Path) -> list[str]:
+    """Every expected_answer_contains keyword must exist SOMEWHERE in the
+    corpus. A keyword that appears in no source document can never be
+    produced by a grounded answer - that question is testing a fantasy.
+    Returns a list of problems (empty = valid)."""
+    problems: list[str] = []
+    corpus = _corpus_text()
+    corpus_l = corpus.lower()
+    for q in _iter_questions(input_path):
+        for kw in q.get("expected_answer_contains", []) or []:
+            if kw.lower() not in corpus_l:
+                problems.append(f"{q['id']}: keyword {kw!r} not found in corpus")
+    return problems
+
+
 def _call_service(q: dict, mock: bool) -> dict:
     """Invoke the RAG service. Returns a dict with keys:
     answer, refused, retrieved_ids, latency_ms, log_question, log_answer,
@@ -212,6 +252,7 @@ def _call_service(q: dict, mock: bool) -> dict:
 
     from rag.service import ask
     from rag.prompts import Message
+    from observability.pii import redact_pii
 
     t0 = time.perf_counter()
     history = [Message(role=h["role"], content=h["content"]) for h in q.get("history", []) or []]
@@ -228,8 +269,10 @@ def _call_service(q: dict, mock: bool) -> dict:
         "refused": result.refused,
         "retrieved_ids": retrieved_ids,
         "latency_ms": latency_ms,
-        "log_question": q["question"],
-        "log_answer": result.answer,
+        # Mirror what the service ACTUALLY writes to logs/DB: the
+        # redacted forms, so the PII rubric audits the real pipeline.
+        "log_question": redact_pii(q["question"]),
+        "log_answer": redact_pii(result.answer),
         "system_hash": "",  # real impl: hash the SYSTEM_TEMPLATE at ask() time
     }
 
@@ -328,6 +371,16 @@ def main() -> int:
 
     if not args.input.exists():
         print(f"ERROR: input file not found: {args.input}", file=sys.stderr)
+        return 2
+
+    # Question-set sanity: expected keywords must exist in the corpus.
+    # Runs in BOTH mock and real mode (deterministic, costs nothing).
+    problems = validate_questions(args.input)
+    if problems:
+        print("=== QUESTION SET INVALID ===", file=sys.stderr)
+        for p in problems:
+            print(f"  {p}", file=sys.stderr)
+        print("Fix the question keywords or extend the corpus.", file=sys.stderr)
         return 2
 
     if not args.mock:

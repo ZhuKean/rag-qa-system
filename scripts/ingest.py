@@ -70,12 +70,15 @@ class FileManifest:
 def _iter_files(data_dir: Path) -> list[Path]:
     """Return all files in data_dir whose suffix has a loader.
 
-    Sorted by name for deterministic output.
+    Sorted by name for deterministic output. Symlinks are skipped:
+    a symlink (e.g. ``handbook.txt -> handbook_cn.txt`` kept for
+    backwards compatibility with tests) points at the same content
+    as its target, and ingesting both would double-count every chunk.
     """
     return sorted(
         p
         for p in data_dir.iterdir()
-        if p.is_file() and p.suffix.lower() in LOADERS
+        if p.is_file() and not p.is_symlink() and p.suffix.lower() in LOADERS
     )
 
 

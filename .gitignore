@@ -17,6 +17,7 @@ PLAN.md
 data/chroma/
 data/manifest.json
 data/handbook.orig.txt
+logs/
 logs/*.db
 logs/*.log
 

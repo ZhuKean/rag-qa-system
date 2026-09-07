@@ -260,6 +260,31 @@ top_k  rerank   temp    acc    p50ms    p90ms   in_tok  out_tok        cost
     5   False   0.70   1.00     23.2     23.2     1600        9  $ 0.000227
 ```
 
+## Comprehensive evaluation (v2)
+
+The 12-question v1 suite covers only the bilingual happy path. A
+**comprehensive suite** that also tests OOD refusal, multi-turn,
+citation correctness, PII, injection, and edge cases is described in
+[`docs/EVAL_PLAN.md`](docs/EVAL_PLAN.md) and runnable as:
+
+```
+$ python -m eval.run_eval_v2 --mock --output eval/results_v2_mock.json
+=== SUMMARY ===
+  bilingual_cn    pass= 12/12   refused=0    p50=  25.0ms  p90=  25.0ms
+  bilingual_en    pass=  5/5    refused=0    p50=  25.0ms  p90=  25.0ms
+  ood             pass=  6/6    refused=6    p50=  25.0ms  p90=  25.0ms
+  multi_turn      pass=  3/3    refused=0    p50=  25.0ms  p90=  25.0ms
+  citation        pass=  2/2    refused=0    p50=  25.0ms  p90=  25.0ms
+  pii             pass=  3/3    refused=0    p50=  25.0ms  p90=  25.0ms
+  injection       pass=  3/3    refused=3    p50=  25.0ms  p90=  25.0ms
+  edge_case       pass=  2/2    refused=1    p50=  25.0ms  p90=  25.0ms
+  TOTAL pass=36/36
+```
+
+The v2 runner exits non-zero on regression vs. the recorded
+`eval/baseline.json`, so it can be wired into CI. Drop the `--mock`
+flag to run against a real LLM endpoint.
+
 ---
 
 ## Design highlights

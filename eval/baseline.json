@@ -1,0 +1,37 @@
+{
+  "by_category": {
+    "bilingual_cn": {
+      "pass_rate": 1.0,
+      "p90_latency_ms": 25.0
+    },
+    "bilingual_en": {
+      "pass_rate": 1.0,
+      "p90_latency_ms": 25.0
+    },
+    "ood": {
+      "pass_rate": 1.0,
+      "p90_latency_ms": 25.0
+    },
+    "multi_turn": {
+      "pass_rate": 1.0,
+      "p90_latency_ms": 25.0
+    },
+    "citation": {
+      "pass_rate": 1.0,
+      "p90_latency_ms": 25.0
+    },
+    "pii": {
+      "pass_rate": 1.0,
+      "p90_latency_ms": 25.0
+    },
+    "injection": {
+      "pass_rate": 1.0,
+      "p90_latency_ms": 25.0
+    },
+    "edge_case": {
+      "pass_rate": 1.0,
+      "p90_latency_ms": 25.0
+    }
+  },
+  "total_pass_rate": 1.0
+}

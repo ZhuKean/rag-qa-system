@@ -145,12 +145,18 @@ def main(argv: list[str] | None = None) -> int:
         logger.info("resetting collection (--reset)")
         # Chroma exposes a delete-by-collection primitive; we use the
         # underlying client API to drop and recreate the collection.
+        # delete_collection raises NotFoundError when the collection
+        # doesn't exist yet (fresh install / wiped data dir), which is
+        # a perfectly fine state to reset *from* — nothing to drop.
         import chromadb
 
         client = chromadb.PersistentClient(path=settings.chroma_dir)
-        client.delete_collection(vector_store.COLLECTION_NAME)
+        try:
+            client.delete_collection(vector_store.COLLECTION_NAME)
+            logger.info("collection dropped; will recreate on next add")
+        except chromadb.errors.NotFoundError:
+            logger.info("collection did not exist; starting fresh")
         vector_store.reset_collection_cache()
-        logger.info("collection dropped; will recreate on next add")
 
     files = _iter_files(data_dir)
     if not files:

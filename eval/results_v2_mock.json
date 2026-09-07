@@ -79,7 +79,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "行为规范 运营 权益 [1]"
+      "answer": "愿景 核心价值观 [1]"
     },
     {
       "id": "q-002",
@@ -90,7 +90,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "机密 经营战略 复制 下载 [1]"
+      "answer": "机密 泄露 [1]"
     },
     {
       "id": "q-003",
@@ -101,7 +101,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "不得 私人事务 [1]"
+      "answer": "团结协作 歧视 [1]"
     },
     {
       "id": "q-004",
@@ -112,7 +112,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "警告 降级 奖金 解除 [1]"
+      "answer": "警告 记过 解除 [1]"
     },
     {
       "id": "q-005",
@@ -123,7 +123,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "整洁 拖鞋 背心 短裤 [1]"
+      "answer": "十五天 二十天 [1]"
     },
     {
       "id": "q-006",
@@ -134,7 +134,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "礼品 礼金 红包 宴请 [1]"
+      "answer": "礼品 [1]"
     },
     {
       "id": "q-007",
@@ -145,7 +145,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "首问负责制 客户 [1]"
+      "answer": "推荐奖金 五千元 [1]"
     },
     {
       "id": "q-008",
@@ -156,7 +156,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "安全操作规程 隐患 劳保用品 [1]"
+      "answer": "密码 十二位 [1]"
     },
     {
       "id": "q-009",
@@ -167,7 +167,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "请假 审批 [1]"
+      "answer": "诊断证明 审批 [1]"
     },
     {
       "id": "q-010",
@@ -178,7 +178,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "团队 合作 [1]"
+      "answer": "团结协作 [1]"
     },
     {
       "id": "q-011",
@@ -189,7 +189,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "申报 回避 [1]"
+      "answer": "高铁二等座 八百元 [1]"
     },
     {
       "id": "q-012",
@@ -200,7 +200,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "企业文化 服务意识 责任心 机密 团队 [1]"
+      "answer": "三十天 [1]"
     },
     {
       "id": "q-013",
@@ -211,7 +211,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "行为规范 运营 [1]"
+      "answer": "wealth management integrity [1]"
     },
     {
       "id": "q-014",
@@ -222,7 +222,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "不得 私人事务 [1]"
+      "answer": "monday forty [1]"
     },
     {
       "id": "q-015",
@@ -233,7 +233,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "整洁 [1]"
+      "answer": "150 300 [1]"
     },
     {
       "id": "q-016",
@@ -244,7 +244,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "请假 审批 [1]"
+      "answer": "certificate three days [1]"
     },
     {
       "id": "q-017",
@@ -255,7 +255,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "机密 经营战略 [1]"
+      "answer": "confidential disclosed [1]"
     },
     {
       "id": "q-018",
@@ -347,7 +347,7 @@
       },
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "请假 审批 [1]"
+      "answer": "诊断证明 审批 [1]"
     },
     {
       "id": "q-025",
@@ -361,7 +361,7 @@
       },
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "请假 审批 [1]"
+      "answer": "十五天 [1]"
     },
     {
       "id": "q-026",
@@ -375,7 +375,7 @@
       },
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "病假 事假 [1]"
+      "answer": "十五天 十天 [1]"
     },
     {
       "id": "q-027",
@@ -386,7 +386,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "行为规范 [1]"
+      "answer": "十五天 [1]"
     },
     {
       "id": "q-028",
@@ -397,7 +397,7 @@
       "metrics": {},
       "latency_ms": 25.0,
       "refused": false,
-      "answer": "OK [1]"
+      "answer": "诊断证明 [1]"
     },
     {
       "id": "q-029",

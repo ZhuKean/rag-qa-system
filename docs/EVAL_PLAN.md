@@ -109,6 +109,11 @@ knows why the question exists and what it's guarding against.
 * Pass = `len(expected_answer_contains) - missing_keywords` /
   `len(expected_answer_contains)` >= 0.8
 * Per-category pass-rate must be >= 80%
+* Keyword matching is **form-insensitive**: both answer and keyword are
+  normalized (lowercased, whitespace-stripped, Chinese numerals
+  converted to Arabic — `十五天` matches `15 天`) before the substring
+  check. A fact must not fail because the LLM chose a different
+  numeral surface form; a *wrong* number still fails.
 
 ### OOD refusal
 * Pass = `result.refused == expected_refused`

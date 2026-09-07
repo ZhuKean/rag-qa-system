@@ -50,12 +50,51 @@ class QuestionResult:
 # Rubric — one assert_* function per category
 # ---------------------------------------------------------------------------
 
+_CN_DIGITS = {"零": 0, "一": 1, "二": 2, "三": 3, "四": 4,
+              "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+_CN_UNITS = {"十": 10, "百": 100, "千": 1000}
+
+
+def _cn_run_to_int(run: str) -> str:
+    """Parse a run of Chinese numerals (e.g. 十五, 二十) to Arabic digits."""
+    total, num = 0, 0
+    for ch in run:
+        if ch in _CN_DIGITS:
+            num = _CN_DIGITS[ch]
+        elif ch in _CN_UNITS:
+            if num == 0:
+                num = 1
+            total += num * _CN_UNITS[ch]
+            num = 0
+    return str(total + num)
+
+
+def _normalize_for_match(text: str) -> str:
+    """Make keyword matching robust to two surface forms:
+
+    1. Chinese vs Arabic numerals: the corpus writes 十五天 while LLMs
+       usually answer ``15 天`` — both should count as a hit.
+    2. Whitespace: ``15 天`` vs ``15天``.
+    Applied to BOTH the answer and the keyword, so the comparison is
+    symmetric.
+    """
+    import re
+    lowered = text.lower()
+    converted = re.sub(
+        r"[零一二三四五六七八九十百千]+",
+        lambda m: _cn_run_to_int(m.group(0)),
+        lowered,
+    )
+    return "".join(converted.split())
+
+
 def _check_keywords(answer: str, expected: list[str], missing_out: list[str]) -> bool:
     if not expected:
         return True
-    answer_l = answer.lower()
-    hits = sum(1 for k in expected if k.lower() in answer_l)
-    missing_out.extend(k for k in expected if k.lower() not in answer_l)
+    answer_n = _normalize_for_match(answer)
+    hits = sum(1 for k in expected if _normalize_for_match(k) in answer_n)
+    missing_out.extend(
+        k for k in expected if _normalize_for_match(k) not in answer_n)
     return hits / len(expected) >= 0.8
 
 

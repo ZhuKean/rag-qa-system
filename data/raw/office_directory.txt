@@ -1,0 +1,17 @@
+AIA 公司通讯录（2025 年版，限内部使用）
+
+==== 上海总部 ====
+张伟  总裁办          手机 13800138000   邮箱 zhangwei@aia-corp.example.com
+李娜  人力资源部      手机 13900139000   邮箱 lina@aia-corp.example.com
+王强  研发中心        手机 13700137000   邮箱 wangqiang@aia-corp.example.com
+刘洋  财务部          手机 13600136000   邮箱 liuyang@aia-corp.example.com
+
+==== 北京分公司 ====
+陈静  市场中心        手机 13500135000   邮箱 chenjing@aia-corp.example.com
+赵磊  运营中心        手机 13400134000   邮箱 zhaolei@aia-corp.example.com
+
+==== 紧急联络 ====
+社保紧急联络人：李娜  身份证号 110101199003078888  银行卡 6222020200001234567
+法务紧急联络人：王强  邮箱 legal@aia-corp.example.com
+
+注：以上信息均为测试用虚构数据。如需更新请联系 IT 部。

@@ -1,0 +1,52 @@
+AIA Employee Handbook (English Edition, v3)
+
+Chapter 1 — Company Overview
+AIA Tech is a fintech company focused on wealth-management solutions.
+Registered capital: CNY 50 million. Headquartered in Shanghai.
+Branch offices in Beijing and Shenzhen. Total headcount exceeds 800.
+Mission: bring professional-grade wealth management to every family.
+Core values: integrity, professionalism, innovation, win-win.
+Two company-wide town halls are held each year, in January and July.
+Internal transfers are encouraged after two years of tenure.
+
+Chapter 2 — Compensation
+Base salary is graded into twelve bands by role level.
+Reviewed every March against market data; minimum 5 % annual uplift.
+Performance bonus paid quarterly: 10 % – 40 % of base.
+Annual bonus tied to company-wide OKR achievement: 2–6 months' salary.
+All regular employees receive full social insurance plus housing fund.
+Free breakfast (CNY 15/day) and afternoon tea (CNY 20/day) on workdays.
+Housing subsidy of up to CNY 3,000/month for core roles.
+Three-month salary as onboarding bonus for senior hires (M4+).
+
+Chapter 4 — Working Hours
+Standard hours: Monday to Friday, 09:00 – 18:00 with one-hour lunch.
+Forty hours per week. Eight hours per day average.
+Flexible hours apply to R&D and product roles.
+Remote work allowed up to two days per week with prior approval.
+Overtime pay: 150 % on workdays, 200 % on weekends, 300 % on holidays.
+Sick leave beyond three days requires a hospital certificate.
+
+Chapter 6 — Code of Conduct
+Comply with all applicable laws and company policies.
+No bribery, kickbacks, or conflicts of interest.
+Confidential information must not be disclosed externally.
+Harassment, discrimination, and bullying are zero-tolerance offences.
+Whistle-blowers are protected from retaliation.
+Violations may result in warning, demotion, or termination, and may be
+referred to law enforcement where applicable.
+
+Chapter 8 — Information Security
+Account passwords must be at least 12 characters with mixed case,
+digits, and symbols. Do not share accounts. Lock your screen when
+leaving your desk. Sensitive data must remain on encrypted company
+storage only. Report any suspected breach within 24 hours.
+Annual security training is mandatory: two sessions per year.
+Public WiFi may not be used to access internal systems.
+
+Appendix A — Salary Bands
+M1 (Associate): CNY 8,000 – 18,000 / month.
+M2 (Senior Associate): CNY 12,000 – 28,000 / month.
+M3 (Manager): CNY 18,000 – 40,000 / month.
+M4 (Senior Manager): CNY 28,000 – 60,000 / month.
+M5 (Director and above): CNY 45,000 – 100,000 / month.

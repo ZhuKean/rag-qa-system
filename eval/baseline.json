@@ -1,4 +1,5 @@
 {
+  "corpus_at_baseline": "standard (10 files, 27 chunks)",
   "by_category": {
     "bilingual_cn": {
       "pass_rate": 1.0,

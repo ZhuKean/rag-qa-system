@@ -16,6 +16,7 @@ PLAN.md
 # Runtime artifacts (keep data/raw sample corpus, ignore generated stores)
 data/chroma/
 data/manifest.json
+data/handbook.orig.txt
 logs/*.db
 logs/*.log
 

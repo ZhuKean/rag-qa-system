@@ -49,6 +49,10 @@ class AskResult:
     retrieval_count: int = 0
     latency_ms: float = 0.0
     model: str = ""
+    # All retrieved chunk_ids in prompt order. The generator maps [n] to
+    # docs[n-1], so eval tooling needs the FULL list (not just the cited
+    # subset) to validate citation indices.
+    retrieved_ids: list[str] = field(default_factory=list)
 
 
 REFUSAL_REPLY = (
@@ -121,6 +125,7 @@ def ask(
             refused=True,
             retrieval_count=0,
             latency_ms=latency_ms,
+            retrieved_ids=[],
         )
 
     messages = build_messages(question, docs, history=history)
@@ -152,6 +157,7 @@ def ask(
         retrieval_count=len(docs),
         latency_ms=latency_ms,
         model=chat.model,
+        retrieved_ids=[h.chunk.chunk_id for h in docs],
     )
 
 

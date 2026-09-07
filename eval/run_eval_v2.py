@@ -211,7 +211,7 @@ def _call_service(q: dict, mock: bool) -> dict:
         return _mock_call(q)
 
     from rag.service import ask
-    from rag.models import Message
+    from rag.prompts import Message
 
     t0 = time.perf_counter()
     history = [Message(role=h["role"], content=h["content"]) for h in q.get("history", []) or []]
@@ -222,7 +222,7 @@ def _call_service(q: dict, mock: bool) -> dict:
     )
     latency_ms = (time.perf_counter() - t0) * 1000
 
-    retrieved_ids = [rc.chunk.chunk_id for rc in result.retrieved]
+    retrieved_ids = list(result.retrieved_ids)
     return {
         "answer": result.answer,
         "refused": result.refused,

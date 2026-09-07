@@ -73,13 +73,26 @@ def _render_page_to_pil(path: str, page_index: int):
 
 
 def _ocr_image(pil_image) -> str:
-    """Run OCR on a PIL image and return concatenated text."""
+    """Run OCR on a PIL image and return concatenated text.
+
+    RapidOCR >= 3.x returns a ``RapidOCROutput`` dataclass with three
+    tuple fields (``boxes``, ``txts``, ``scores``). Older versions
+    returned a ``(result, elapsed)`` tuple. We read ``txts`` directly
+    and fall back to an empty string when OCR finds nothing.
+    """
     engine = _get_ocr_engine()
-    result, _ = engine(pil_image)
-    if not result:
-        return ""
-    # RapidOCR result: list of [bbox, text, confidence]
-    return "\n".join(line[1] for line in result if line and len(line) >= 2)
+    out = engine(pil_image)
+    # RapidOCROutput exposes .txts as a tuple[str, ...]; missing on the
+    # legacy return shape.
+    txts = getattr(out, "txts", None)
+    if not txts:
+        # Legacy tuple path: ``engine(image)`` returned ``(result, elapsed)``
+        try:
+            result, _ = out  # type: ignore[misc]
+            txts = [line[1] for line in result if line and len(line) >= 2]
+        except Exception:
+            txts = []
+    return "\n".join(txts or [])
 
 
 def load_pdf(path: str) -> list[str]:

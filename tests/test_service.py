@@ -33,6 +33,18 @@ def test_ask_returns_refusal_when_retriever_empty():
     assert result.retrieval_count == 0
 
 
+def test_ask_refuses_empty_question_without_crashing():
+    """Empty / whitespace questions must be refused, never reach the
+    retriever (Chroma rejects empty query strings with a ValueError)."""
+    for empty in ("", "   ", "\n\t "):
+        with patch("rag.service.retrieve") as retr:
+            result = service.ask(empty)
+        retr.assert_not_called()
+        assert result.refused is True
+        assert result.retrieval_count == 0
+        assert result.retrieved_ids == []
+
+
 def test_ask_pipes_through_to_generator():
     docs = [_doc(1), _doc(2)]
     fake_chat = ChatResult(

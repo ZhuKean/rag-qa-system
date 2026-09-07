@@ -103,6 +103,29 @@ def ask(
         history_len=len(history or []),
     )
 
+    # Input guard: an empty (or whitespace-only) question must be refused,
+    # not crash the retriever — Chroma rejects empty query strings.
+    if not question or not question.strip():
+        latency_ms = (time.monotonic() - started) * 1000
+        log_event(
+            "ask.refuse",
+            request_id=request_id,
+            session_id=session_id,
+            reason="empty_question",
+            retrieval_count=0,
+            retrieval_ms=0.0,
+            latency_ms=latency_ms,
+        )
+        return AskResult(
+            request_id=request_id,
+            question=question,
+            answer=REFUSAL_REPLY,
+            refused=True,
+            retrieval_count=0,
+            latency_ms=latency_ms,
+            retrieved_ids=[],
+        )
+
     t0 = time.monotonic()
     docs = retrieve(question)
     retrieval_ms = (time.monotonic() - t0) * 1000

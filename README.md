@@ -1,5 +1,7 @@
 # RAG QA System
 
+**English** | [简体中文](README.zh-CN.md)
+
 A bilingual, citation-backed RAG (Retrieval-Augmented Generation) QA service
 built as a take-home exercise for a Junior Backend Developer role. The
 service answers natural-language questions over an internal knowledge base
@@ -207,6 +209,8 @@ rag-qa-system/
 ---
 
 ## Evaluation
+
+Full measured results and requirement compliance: [`docs/EVAL_REPORT.md`](docs/EVAL_REPORT.md).
 
 ```bash
 # End-to-end metrics (touches real LLM)

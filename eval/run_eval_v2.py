@@ -330,6 +330,15 @@ def main() -> int:
         print(f"ERROR: input file not found: {args.input}", file=sys.stderr)
         return 2
 
+    if not args.mock:
+        # Fail fast on config problems (bad key, dead endpoint, empty
+        # vector store) instead of crashing on question #1 mid-run.
+        from scripts.preflight import run_preflight
+
+        rc = run_preflight()
+        if rc != 0:
+            return rc
+
     results: list[QuestionResult] = []
     for i, q in enumerate(_iter_questions(args.input)):
         if args.limit and i >= args.limit:

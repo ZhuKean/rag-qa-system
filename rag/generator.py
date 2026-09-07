@@ -56,6 +56,10 @@ def _get_client():
 
     `api_key="ollama"` is a placeholder Ollama accepts but doesn't check.
     Real providers (DeepSeek / OpenAI) use the actual key from `.env`.
+
+    Remote endpoints with a placeholder key are rejected up front: sending
+    "ollama" to a hosted provider produces a confusing 401 deep inside the
+    first real request.
     """
     from openai import OpenAI
 
@@ -65,9 +69,21 @@ def _get_client():
             "LLM_BASE_URL is not configured. Set it in .env "
             "(e.g. http://localhost:11434/v1 for local Ollama)."
         )
+    api_key = settings.llm_api_key or "missing"
+    is_local = any(
+        h in settings.llm_base_url
+        for h in ("localhost", "127.0.0.1", "0.0.0.0", "[::1]")
+    )
+    if not is_local and (api_key.lower() in {"ollama", "missing", "changeme"} or len(api_key) < 20):
+        raise RuntimeError(
+            f"LLM_API_KEY is a placeholder ({api_key[:4]}...) but "
+            f"LLM_BASE_URL is a remote endpoint ({settings.llm_base_url}). "
+            "Set the real key in .env or export LLM_API_KEY in this shell. "
+            "Run `python -m scripts.preflight` for a full diagnosis."
+        )
     return OpenAI(
         base_url=settings.llm_base_url,
-        api_key=settings.llm_api_key or "missing",
+        api_key=api_key,
     )
 
 
